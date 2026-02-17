@@ -1,0 +1,56 @@
+scalar JSON
+
+enum DraftStatus { ACTIVE SUBMITTED ARCHIVED }
+
+type TripDraft {
+  id: ID!
+  shared: Boolean!
+  status: DraftStatus!
+  version: Int
+  createdAt: String
+  updatedAt: String!
+  customerName: String
+  customerPhone: String
+  pickupText: String
+  pickupDate: String
+  pickupTime: String
+  formValue: JSON
+}
+
+input TripDraftCreateInput {
+  shared: Boolean!
+}
+
+input TripDraftSaveInput {
+  id: ID!
+  expectedVersion: Int
+  formValue: JSON!
+}
+
+type DraftLock {
+  token: String
+  userId: String
+  userName: String
+  acquiredAt: String
+  ttlSeconds: Int
+}
+
+type Query {
+  tripDraft(id: ID!): TripDraft
+  tripDraftsMine(status: DraftStatus!): [TripDraft!]!
+  tripDraftsAll(status: DraftStatus!): [TripDraft!]!
+  tripDraftSearch(status: DraftStatus!, name: String, phone: String, pickup: String): [TripDraft!]!
+
+  draftLockStatus(draftId: ID!): DraftLock
+}
+
+type Mutation {
+  createTripDraft(input: TripDraftCreateInput!): TripDraft!
+  saveTripDraft(input: TripDraftSaveInput!): TripDraft!
+  deleteTripDraft(id: ID!): Boolean!
+  submitTripDraft(id: ID!): Boolean!
+
+  acquireDraftLock(draftId: ID!): DraftLock!
+  renewDraftLock(draftId: ID!, token: String!): DraftLock!
+  releaseDraftLock(draftId: ID!, token: String!): Boolean!
+}

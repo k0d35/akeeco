@@ -1,0 +1,30 @@
+{
+  "name": "sunisland-frontend",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "build": "ng build --configuration production"
+  },
+  "dependencies": {
+    "@angular/animations": "^21.1.4",
+    "@angular/common": "^21.1.4",
+    "@angular/compiler": "^21.1.4",
+    "@angular/core": "^21.1.4",
+    "@angular/forms": "^21.1.4",
+    "@angular/platform-browser": "^21.1.4",
+    "@angular/platform-browser-dynamic": "^21.1.4",
+    "@angular/router": "^21.1.4",
+    "@stomp/stompjs": "^7.0.0",
+    "rxjs": "^7.8.0",
+    "sockjs-client": "^1.6.1",
+    "tslib": "^2.6.0",
+    "zone.js": "^0.16.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^21.1.4",
+    "@angular/cli": "^21.1.4",
+    "@angular/compiler-cli": "^21.1.4",
+    "@types/sockjs-client": "^1.5.4",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,58 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormGroup } from '@angular/forms';
+import { TripWizardStateService } from '../trip-wizard-state.service';
+
+@Component({
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <h2>Billing</h2>
+    <div [formGroup]="fg">
+      <label class="lbl">Billing Name</label>
+      <input class="in" formControlName="billingName" />
+
+      <div formGroupName="billingAddress" class="grid">
+        <div class="span2">
+          <label class="lbl">Address Line 1</label>
+          <input class="in" formControlName="line1" />
+        </div>
+        <div class="span2">
+          <label class="lbl">Address Line 2</label>
+          <input class="in" formControlName="line2" />
+        </div>
+        <div>
+          <label class="lbl">City</label>
+          <input class="in" formControlName="city" />
+        </div>
+        <div>
+          <label class="lbl">Parish</label>
+          <input class="in" formControlName="parish" />
+        </div>
+      </div>
+
+      <label class="lbl">Payment Method</label>
+      <select class="in" formControlName="paymentMethod">
+        <option value="CARD">Card (tokenized)</option>
+        <option value="CASH">Cash</option>
+        <option value="INVOICE">Invoice</option>
+      </select>
+
+      <div class="note">
+        <b>Security note:</b> Raw card number/CVV must never be stored in drafts. Use token fields only.
+      </div>
+    </div>
+  `,
+  styles: [`
+    .grid{ display:grid; gap:12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .span2{ grid-column: span 2; }
+    .lbl{ display:block; font-weight:900; margin: 8px 0 6px; }
+    .in{ width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); outline:none; }
+    .in:focus{ border-color: var(--gold); box-shadow: 0 0 0 4px rgba(200,162,74,.15); }
+    .note{ margin-top: 10px; padding: 10px; border:1px solid var(--border); border-radius:12px; background:#fff; color: var(--muted); }
+  `]
+})
+export class BillingStepComponent {
+  private state = inject(TripWizardStateService);
+  fg: FormGroup = this.state.form.get('billing') as FormGroup;
+}

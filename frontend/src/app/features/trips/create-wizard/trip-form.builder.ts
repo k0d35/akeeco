@@ -1,0 +1,77 @@
+import { FormBuilder, Validators } from '@angular/forms';
+
+export function buildTripWizardForm(fb: FormBuilder) {
+  return fb.group({
+    customer: fb.group({
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      email: ['', [Validators.email]],
+      companyName: [''],
+      companyId: [''],
+      notes: [''],
+    }),
+    pickup: fb.group({
+      formatted: ['', [Validators.required]],
+      placeId: [''],
+      city: [''],
+      intersection: [''],
+      dwellingType: [''],
+      lat: [null],
+      lng: [null],
+    }),
+    dropoff: fb.group({
+      formatted: ['', [Validators.required]],
+      placeId: [''],
+      city: [''],
+      intersection: [''],
+      dwellingType: [''],
+      lat: [null],
+      lng: [null],
+    }),
+    schedule: fb.group({
+      pickupDate: ['', [Validators.required]],
+      pickupTime: ['', [Validators.required]],
+      flightNumber: [''],
+      passengers: [1, [Validators.min(1), Validators.max(20)]],
+      luggageCount: [0, [Validators.min(0), Validators.max(30)]],
+      specialRequests: [''],
+    }),
+    pricing: fb.group({
+      serviceType: ['EXEC', [Validators.required]],
+      baseFare: [0, [Validators.min(0)]],
+      distanceKm: [0, [Validators.min(0)]],
+      timeMin: [0, [Validators.min(0)]],
+      perKmRate: [0, [Validators.min(0)]],
+      perMinRate: [0, [Validators.min(0)]],
+      surgeMultiplier: [1, [Validators.min(1)]],
+      discount: [0, [Validators.min(0)]],
+      taxes: [0, [Validators.min(0)]],
+      total: [0, [Validators.min(0)]],
+      quoteNotes: [''],
+    }),
+    assignment: fb.group({
+      assignedDriverId: [''],
+      assignedVehicleId: [''],
+      dispatcherOverrideAllowed: [false],
+      status: ['INACTIVE'],
+    }),
+    billing: fb.group({
+      billingName: ['', [Validators.required]],
+      billingAddress: fb.group({
+        line1: ['', [Validators.required]],
+        line2: [''],
+        city: ['', [Validators.required]],
+        parish: ['St. James'],
+        postal: [''],
+        country: ['JM'],
+      }),
+      paymentMethod: ['CARD', [Validators.required]],
+      token: [''],
+      brand: [''],
+      last4: [''],
+      expMonth: [''],
+      expYear: [''],
+    }),
+  });
+}
