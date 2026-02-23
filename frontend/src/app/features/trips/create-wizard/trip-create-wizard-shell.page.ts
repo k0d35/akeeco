@@ -81,6 +81,7 @@ import { mergeUntouched } from './draft-merge.util';
             <wiz-nav
               [progressPercent]="progressPercent()"
               [progressHint]="progressHint()"
+              [stepReady]="currentStepValid()"
               [canBack]="canBack()"
               [canNext]="canNext()"
               [canSubmit]="canSubmit()"
@@ -143,6 +144,27 @@ import { mergeUntouched } from './draft-merge.util';
     .status{ font-size:12px; opacity:.8; font-weight:900; }
     .msg{ margin-top:4px; font-size:12px; color: var(--muted); }
     .autosave{ margin-top: 12px; font-size: 12px; color: var(--muted); padding-top: 10px; border-top: 1px solid var(--border); }
+
+    @media (max-width: 1200px){
+      .grid{ grid-template-columns: 240px 1fr; }
+      .right{ grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 900px){
+      .shell{ padding:12px; }
+      .head{ flex-direction:column; align-items:stretch; }
+      .toggle{ width:100%; }
+      .banner{ flex-direction:column; align-items:flex-start; }
+      .banner-actions{ width:100%; flex-wrap:wrap; }
+      .grid{ grid-template-columns: 1fr; gap:12px; }
+      .center, .right{ padding:12px; }
+    }
+
+    @media (max-width: 640px){
+      .banner-actions .btn{ width:100%; }
+      .row{ flex-wrap:wrap; }
+      .status{ font-size:11px; }
+    }
   `],
 })
 export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
@@ -344,7 +366,7 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
       label: d.label,
       route: d.route,
       optional: d.optional,
-      complete: d.isComplete(this.form),
+      complete: this.state.isStepValid(d.key),
     }))
   );
 
@@ -352,23 +374,24 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
     const clickedIndex = this.defs.findIndex((d) => d.route === route);
     const currentIndex = this.stepIndex();
     if (clickedIndex <= currentIndex) return this.goTo(route);
-    const allPrevComplete = this.defs.slice(0, clickedIndex).every((d) => d.isComplete(this.form));
+    const allPrevComplete = this.defs.slice(0, clickedIndex).every((d) => this.state.isStepValid(d.key));
     if (allPrevComplete) return this.goTo(route);
   }
 
   canBack = computed(() => this.stepIndex() > 0);
+  currentStepValid = computed(() => this.state.isStepValid(this.activeKey()));
 
   canNext = computed(() => {
     const i = this.stepIndex();
     if (i < 0 || i >= this.defs.length - 1) return false;
-    return this.defs[i].canProceed(this.form);
+    return this.currentStepValid();
   });
 
   isLastStep = computed(() => this.activeKey() === 'review');
 
   canSubmit = computed(() => {
     this.form.updateValueAndValidity({ emitEvent: false });
-    return this.form.valid;
+    return this.state.isStepValid('review');
   });
 
   blockedMessage = computed(() => {
@@ -393,13 +416,37 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
   goNext() {
     const i = this.stepIndex();
     if (i < 0 || i >= this.defs.length - 1) return;
-    if (!this.defs[i].canProceed(this.form)) { this.form.markAllAsTouched(); return; }
+    if (!this.canNext()) {
+      const key = this.activeKey();
+      const current = this.form.get(key);
+      current?.markAllAsTouched();
+      return;
+    }
     this.goTo(this.defs[i + 1].route);
   }
 
   saveAndExit() {
-    this.autosaveNow();
-    this.router.navigateByUrl('/app/trips/drafts');
+    const id = this.state.draftId;
+    if (!id) { this.router.navigateByUrl('/app/trips/drafts'); return; }
+    if (this.readonly()) { this.router.navigateByUrl('/app/trips/drafts'); return; }
+    this._autosaveStatus.set('Saving draft…');
+    this.drafts.save(id, this.state.draftVersion, this.state.raw()).subscribe({
+      next: (saved) => {
+        this._serverDraft = saved;
+        this.state.draftVersion = (saved.version ?? null) as any;
+        this._autosaveStatus.set('Draft saved.');
+        this.router.navigateByUrl('/app/trips/drafts');
+      },
+      error: (err: any) => {
+        const msg = String(err?.message || err);
+        if (msg.toLowerCase().includes('conflict') || msg.toLowerCase().includes('version')) {
+          this._conflictBanner.set(true);
+          this._autosaveStatus.set('Draft save conflict.');
+        } else {
+          this._autosaveStatus.set('Draft save failed.');
+        }
+      }
+    });
   }
 
   submit() {

@@ -60,6 +60,27 @@ import { CommonModule } from '@angular/common';
     .title{ font-weight:900; }
     .actions{ display:flex; gap:10px; }
     .content{ padding:16px; background:#fff; }
+
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+      .side{ border-right:none; border-bottom:1px solid var(--border); }
+      .nav{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .nav a{ text-align:center; }
+      .foot{ display:none; }
+      .top{ flex-wrap:wrap; gap:10px; }
+    }
+
+    @media (max-width: 640px){
+      .side{ padding:12px; }
+      .brand{ padding:8px; }
+      .logo{ width:36px; height:36px; border-radius:10px; }
+      .nav{ grid-template-columns: 1fr; }
+      .top{ padding:12px; }
+      .title{ font-size:14px; }
+      .content{ padding:12px; }
+      .actions{ width:100%; }
+      .actions .btn{ width:100%; }
+    }
   `]
 })
 export class StaffShellComponent {}

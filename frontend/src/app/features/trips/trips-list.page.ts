@@ -32,40 +32,42 @@ interface TripRow {
       </header>
 
       <section class="card">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Customer</th>
-              <th>Pickup Location</th>
-              <th>Pickup Time</th>
-              <th>Presence</th>
-            </tr>
-          </thead>
+        <div class="tableWrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Customer</th>
+                <th>Pickup Location</th>
+                <th>Pickup Time</th>
+                <th>Presence</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            <tr *ngFor="let t of trips">
-              <td><span class="pill" [class.gold]="t.status==='ACTIVE'">{{ t.status }}</span></td>
-              <td class="strong">{{ t.customerName }}</td>
-              <td>{{ t.pickupText }}</td>
-              <td>{{ t.pickupDateTime }}</td>
-              <td>
-                <ng-container *ngIf="presenceForTrip(t.id) as p">
-                  <div class="presenceBlock" [attr.title]="p.tooltip">
-                    <div class="presenceRow">
-                      <span class="pDot" *ngFor="let d of p.dots" [class.inactive]="!d.active">{{ d.initials }}</span>
-                      <span class="more" *ngIf="p.moreDots">+{{ p.moreDots }}</span>
+            <tbody>
+              <tr *ngFor="let t of trips">
+                <td><span class="pill" [class.gold]="t.status==='ACTIVE'">{{ t.status }}</span></td>
+                <td class="strong">{{ t.customerName }}</td>
+                <td>{{ t.pickupText }}</td>
+                <td>{{ t.pickupDateTime }}</td>
+                <td>
+                  <ng-container *ngIf="presenceForTrip(t.id) as p">
+                    <div class="presenceBlock" [attr.title]="p.tooltip">
+                      <div class="presenceRow">
+                        <span class="pDot" *ngFor="let d of p.dots" [class.inactive]="!d.active">{{ d.initials }}</span>
+                        <span class="more" *ngIf="p.moreDots">+{{ p.moreDots }}</span>
+                      </div>
+                      <div class="presenceLines" *ngIf="p.lines?.length">
+                        <span class="line" *ngFor="let l of p.lines" [class.inactive]="!l.active">{{ l.text }}</span>
+                        <span class="moreLines" *ngIf="p.moreLines">+{{ p.moreLines }} more</span>
+                      </div>
                     </div>
-                    <div class="presenceLines" *ngIf="p.lines?.length">
-                      <span class="line" *ngFor="let l of p.lines" [class.inactive]="!l.active">{{ l.text }}</span>
-                      <span class="moreLines" *ngIf="p.moreLines">+{{ p.moreLines }} more</span>
-                    </div>
-                  </div>
-                </ng-container>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                  </ng-container>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   `,
@@ -74,6 +76,7 @@ interface TripRow {
     .head{ display:flex; justify-content: space-between; align-items:flex-start; gap:12px; }
     .sub{ color: var(--muted); margin-top: 6px; }
     .actions{ display:flex; gap:10px; }
+    .tableWrap{ overflow-x:auto; }
     .tbl{ width:100%; border-collapse: collapse; margin-top: 10px; }
     th, td{ text-align:left; padding:10px; border-top:1px solid #F1F2F4; vertical-align: top; }
     th{ font-size:12px; color: var(--muted); font-weight: 900; border-top: none; }
@@ -98,6 +101,18 @@ interface TripRow {
     }
     .line.inactive { color: var(--muted); border-color:#E5E7EB; background:#F9FAFB; }
     .moreLines { font-size:11px; font-weight:900; color: var(--muted); padding-left:2px; }
+
+    @media (max-width: 900px){
+      .head{ flex-direction:column; }
+      .actions{ width:100%; flex-wrap:wrap; }
+      .tbl{ min-width: 760px; }
+    }
+
+    @media (max-width: 640px){
+      .page{ padding: 12px; }
+      .actions .btn{ width:100%; }
+      th, td{ padding:8px; font-size:13px; }
+    }
   `],
 })
 export class TripsListPageComponent implements OnInit {

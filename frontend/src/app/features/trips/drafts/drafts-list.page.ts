@@ -41,9 +41,9 @@ import { TripDraftDto, DraftStatus } from './drafts.gql';
         </div>
 
         <div class="row">
-          <input class="in" placeholder="Search name" [(ngModel)]="qName" (keyup.enter)="search()" />
-          <input class="in" placeholder="Phone" [(ngModel)]="qPhone" (keyup.enter)="search()" />
-          <input class="in" placeholder="Pickup contains..." [(ngModel)]="qPickup" (keyup.enter)="search()" />
+          <input class="in" placeholder="Search name" [(ngModel)]="qName" (ngModelChange)="queueSearch()" (keyup.enter)="search()" />
+          <input class="in" placeholder="Phone" [(ngModel)]="qPhone" (ngModelChange)="queueSearch()" (keyup.enter)="search()" />
+          <input class="in" placeholder="Pickup contains..." [(ngModel)]="qPickup" (ngModelChange)="queueSearch()" (keyup.enter)="search()" />
           <button class="btn secondary" (click)="clear()">Clear</button>
           <button class="btn gold" (click)="search()">Search</button>
         </div>
@@ -116,6 +116,26 @@ import { TripDraftDto, DraftStatus } from './drafts.gql';
     .foot{ margin-top: 16px; color: var(--muted); }
     a{ color: var(--fg); text-decoration:none; }
     a:hover{ text-decoration: underline; }
+
+    @media (max-width: 900px){
+      .head{ flex-direction:column; }
+      .actions{ width:100%; flex-wrap:wrap; }
+      .row{ align-items:stretch; }
+      .row .btn{ min-width: 120px; }
+      .item{ flex-direction:column; }
+      .buttons{ flex-direction:row; min-width:0; }
+    }
+
+    @media (max-width: 640px){
+      .page{ padding:12px; }
+      .actions .btn{ width:100%; }
+      .seg{ width:100%; overflow:auto; }
+      .check{ width:100%; }
+      .in{ min-width:0; width:100%; }
+      .row .btn{ width:100%; }
+      .buttons{ display:grid; grid-template-columns: 1fr 1fr; width:100%; }
+      .buttons .btn{ width:100%; }
+    }
   `],
 })
 export class DraftsListPageComponent {
@@ -133,6 +153,7 @@ export class DraftsListPageComponent {
   qPhone = '';
   qPickup = '';
   sharedOnly = false;
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() { this.refresh(); }
 
@@ -144,6 +165,11 @@ export class DraftsListPageComponent {
   clear() {
     this.qName = ''; this.qPhone = ''; this.qPickup = ''; this.sharedOnly = false;
     this.search();
+  }
+
+  queueSearch(delayMs = 300) {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.search(), delayMs);
   }
 
   search() {
@@ -185,4 +211,5 @@ export class DraftsListPageComponent {
   format(iso: string): string {
     try { return new Date(iso).toLocaleString(); } catch { return iso; }
   }
+
 }

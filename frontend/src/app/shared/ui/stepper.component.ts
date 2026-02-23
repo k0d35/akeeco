@@ -44,6 +44,12 @@ export interface StepperStep {
     .label{ font-weight: 900; }
     .opt{ margin-left: 8px; font-size:11px; color: var(--muted); font-weight:800; }
     .chk{ font-weight: 900; }
+
+    @media (max-width: 640px){
+      .step{ padding:9px; }
+      .label{ font-size:14px; }
+      .opt{ display:block; margin-left:0; margin-top:2px; }
+    }
   `]
 })
 export class StepperComponent {
