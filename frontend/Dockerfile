@@ -5,6 +5,8 @@ COPY package.json ./
 RUN npm install
 
 COPY . .
+ARG GOOGLE_PLACES_API_KEY=""
+RUN sed -i "s|__GOOGLE_PLACES_API_KEY__|${GOOGLE_PLACES_API_KEY}|g" src/environments/environment.ts
 RUN npm run build
 
 FROM nginx:1.25-alpine

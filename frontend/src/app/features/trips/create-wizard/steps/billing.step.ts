@@ -14,7 +14,7 @@ import { TripWizardStateService } from '../trip-wizard-state.service';
 
       <div formGroupName="billingAddress" class="grid">
         <div class="span2">
-          <label class="lbl">Address Line 1</label>
+          <label class="lbl">Address Line 1 <span class="req">*</span></label>
           <input class="in" formControlName="line1" />
         </div>
         <div class="span2">
@@ -22,16 +22,16 @@ import { TripWizardStateService } from '../trip-wizard-state.service';
           <input class="in" formControlName="line2" />
         </div>
         <div>
-          <label class="lbl">City</label>
+          <label class="lbl">City <span class="req">*</span></label>
           <input class="in" formControlName="city" />
         </div>
         <div>
-          <label class="lbl">Parish</label>
+          <label class="lbl">Parish <span class="req">*</span></label>
           <input class="in" formControlName="parish" />
         </div>
       </div>
 
-      <label class="lbl">Payment Method</label>
+      <label class="lbl">Payment Method <span class="req">*</span></label>
       <select class="in" formControlName="paymentMethod">
         <option value="CARD">Card (tokenized)</option>
         <option value="CASH">Cash</option>
@@ -47,6 +47,7 @@ import { TripWizardStateService } from '../trip-wizard-state.service';
     .grid{ display:grid; gap:12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .span2{ grid-column: span 2; }
     .lbl{ display:block; font-weight:900; margin: 8px 0 6px; }
+    .req{ color:#b42318; }
     .in{ width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); outline:none; }
     .in:focus{ border-color: var(--gold); box-shadow: 0 0 0 4px rgba(200,162,74,.15); }
     .in.ng-valid.ng-dirty, .in.ng-valid.ng-touched{ border-color: var(--ok); color: var(--ok); }

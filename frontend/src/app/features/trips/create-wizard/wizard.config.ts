@@ -25,7 +25,7 @@ export function buildWizardSteps(): WizardStepDef[] {
   return [
     { key:'customer', label:'Customer', route:'customer',
       isComplete:(f)=>validGroup(f,'customer'), canProceed:(f)=>validGroup(f,'customer'),
-      invalidMessage:()=> 'Customer details required (first/last/phone).' },
+      invalidMessage:()=> 'Please complete required customer fields.' },
 
     { key:'pickup', label:'Pickup', route:'pickup',
       isComplete:(f)=>validGroup(f,'pickup'), canProceed:(f)=>validGroup(f,'pickup'),

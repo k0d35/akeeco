@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 
 export const APP_ROUTES: Routes = [
+  { path: 'staff', loadChildren: () => import('./features/staff/staff.routes').then(m => m.STAFF_ROUTES) },
+
+  // Legacy routes kept for backward compatibility.
   { path: 'login', loadComponent: () => import('./shell/login.page').then(m => m.LoginPageComponent) },
   {
     path: 'app',
@@ -18,6 +21,6 @@ export const APP_ROUTES: Routes = [
       { path: '**', redirectTo: 'trips' }
     ]
   },
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
-  { path: '**', redirectTo: 'login' }
+  { path: '', pathMatch: 'full', redirectTo: 'staff/login' },
+  { path: '**', redirectTo: 'staff/login' }
 ];

@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Subscription, debounceTime, firstValueFrom } from 'rxjs';
+import { Subscription, debounceTime, firstValueFrom, startWith } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { StepperComponent } from '../../../shared/ui/stepper.component';
@@ -178,10 +178,12 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
   private presence = inject(DraftPresenceService);
 
   form = this.state.form;
+  private formChangeTick = toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())), { initialValue: this.form.getRawValue() });
   tracker$ = buildTrackerStream(this.form);
 
   private defs: WizardStepDef[] = buildWizardSteps();
   private subs = new Subscription();
+  private navTick = toSignal(this.router.events.pipe(startWith(null)), { initialValue: null as any });
 
   sharedDraft = signal<boolean>(false);
 
@@ -205,6 +207,12 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
   });
 
   async ngOnInit(): Promise<void> {
+    // Wizard state is singleton-scoped; force a fresh form on every new wizard entry.
+    this.state.reset();
+    this._serverDraft = null;
+    this._showRestoreBanner.set(false);
+    this._conflictBanner.set(false);
+
     const qpId = this.route.snapshot.queryParamMap.get('draftId');
 
     if (qpId) {
@@ -344,15 +352,19 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
 
   dismissConflict() { this._conflictBanner.set(false); }
 
-  progressPercent = computed(() => computeProgressPercent(this.form, this.defs));
+  progressPercent = computed(() => {
+    this.formChangeTick();
+    return computeProgressPercent(this.form, this.activeKey());
+  });
   progressHint = computed(() => {
     const pct = this.progressPercent();
-    if (pct === 100) return 'All required steps completed.';
-    if (pct >= 60) return 'Almost there—finish remaining required steps.';
-    return 'Complete required steps to proceed smoothly.';
+    if (pct === 100) return 'All required fields in this step are complete.';
+    if (pct >= 60) return 'Almost there—finish remaining required fields in this step.';
+    return 'Complete required fields in this step to proceed smoothly.';
   });
 
   activeKey = computed<WizardStepKey>(() => {
+    this.navTick();
     const child = this.route.firstChild;
     const seg = child?.snapshot.url?.[0]?.path as WizardStepKey | undefined;
     return (seg ?? 'customer') as WizardStepKey;

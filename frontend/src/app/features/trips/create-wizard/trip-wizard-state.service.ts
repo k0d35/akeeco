@@ -8,6 +8,7 @@ type StepValidationStatus = Record<WizardStepKey, boolean>;
 @Injectable({ providedIn: 'root' })
 export class TripWizardStateService {
   private _form: FormGroup;
+  private _initialRaw: any;
   private _stepValidationStatus = signal<StepValidationStatus>({
     customer: false,
     pickup: false,
@@ -24,6 +25,7 @@ export class TripWizardStateService {
 
   constructor(private fb: FormBuilder) {
     this._form = buildTripWizardForm(this.fb);
+    this._initialRaw = this._form.getRawValue();
     this.refreshStepValidationStatus();
     this._form.statusChanges.subscribe(() => this.refreshStepValidationStatus());
   }
@@ -38,7 +40,9 @@ export class TripWizardStateService {
   raw() { return this._form.getRawValue(); }
 
   reset() {
-    this._form.reset();
+    this._form.reset(this._initialRaw, { emitEvent: false });
+    this._form.markAsPristine();
+    this._form.markAsUntouched();
     this.refreshStepValidationStatus();
     this.draftId = null;
     this.draftVersion = null;

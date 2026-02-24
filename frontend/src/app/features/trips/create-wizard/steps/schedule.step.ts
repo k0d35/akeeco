@@ -12,21 +12,21 @@ import { PresenceFocusTagDirective } from '../presence-focus-tag.directive';
     <h2>Schedule</h2>
     <div [formGroup]="fg" class="grid">
       <div>
-        <label class="lbl">Pickup Date</label>
+        <label class="lbl">Pickup Date <span class="req">*</span></label>
         <input class="in" type="date" formControlName="pickupDate" presenceFocusTag="schedule.pickupDate"
                (focus)="presence.focus('schedule.pickupDate')" />
       </div>
       <div>
-        <label class="lbl">Pickup Time</label>
+        <label class="lbl">Pickup Time <span class="req">*</span></label>
         <input class="in" type="time" formControlName="pickupTime" presenceFocusTag="schedule.pickupTime"
                (focus)="presence.focus('schedule.pickupTime')" />
       </div>
       <div>
-        <label class="lbl">Passengers</label>
+        <label class="lbl">Passengers <span class="req">*</span></label>
         <input class="in" type="number" formControlName="passengers" min="1" max="20" />
       </div>
       <div>
-        <label class="lbl">Luggage</label>
+        <label class="lbl">Luggage <span class="req">*</span></label>
         <input class="in" type="number" formControlName="luggageCount" min="0" max="30" />
       </div>
       <div class="span2">
@@ -39,6 +39,7 @@ import { PresenceFocusTagDirective } from '../presence-focus-tag.directive';
     .grid{ display:grid; gap:12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .span2{ grid-column: span 2; }
     .lbl{ display:block; font-weight:900; margin: 8px 0 6px; }
+    .req{ color:#b42318; }
     .in{ width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); outline:none; }
     .in:focus{ border-color: var(--gold); box-shadow: 0 0 0 4px rgba(200,162,74,.15); }
     .in.ng-valid.ng-dirty, .in.ng-valid.ng-touched{ border-color: var(--ok); color: var(--ok); }

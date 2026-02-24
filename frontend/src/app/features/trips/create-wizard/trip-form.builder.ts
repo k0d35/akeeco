@@ -30,9 +30,7 @@ export function buildTripWizardForm(fb: FormBuilder) {
       ]],
       phone: ['', [
         Validators.required,
-        Validators.minLength(10),
-        Validators.maxLength(10),
-        Validators.pattern(/^\d{10}$/)
+        Validators.pattern(/^\(\d{3}\) \d{3}-\d{4}$/)
       ]],
       email: ['', [Validators.email, Validators.maxLength(254)]],
       companyName: ['', [Validators.maxLength(100)]],
@@ -43,6 +41,7 @@ export function buildTripWizardForm(fb: FormBuilder) {
       formatted: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
       placeId: ['', [Validators.maxLength(128)]],
       city: ['', [Validators.maxLength(80), Validators.pattern(nameLikePattern)]],
+      postal: ['', [Validators.maxLength(20), Validators.pattern(postalPattern)]],
       intersection: ['', [Validators.maxLength(120)]],
       dwellingType: ['', [oneOf(['house', 'building', 'unit', 'complex'])]],
       lat: [null, [Validators.min(-90), Validators.max(90)]],

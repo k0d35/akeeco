@@ -16,11 +16,12 @@ export function buildTrackerStream(form: FormGroup): Observable<TrackerItem[]> {
       const items: TrackerItem[] = [];
       const cust = form.get('customer') as FormGroup;
       const phone = cust?.get('phone')?.value ?? '';
+      const phoneDigits = String(phone).replace(/\D/g, '');
 
       if (!cust?.valid) items.push({ label:'Customer', status:'ERROR', message:'First/Last/Phone required (10 digits).' });
       else items.push({ label:'Customer', status:'OK' });
 
-      if (phone && String(phone).length !== 10) items.push({ label:'Phone format', status:'ERROR', message:'Phone must be exactly 10 digits.' });
+      if (phone && phoneDigits.length !== 10) items.push({ label:'Phone format', status:'ERROR', message:'Phone must be in format (555) 123-4567.' });
 
       const pick = form.get('pickup') as FormGroup;
       items.push(pick?.valid ? { label:'Pickup', status:'OK' } : { label:'Pickup', status:'ERROR', message:'Pickup address required.' });
