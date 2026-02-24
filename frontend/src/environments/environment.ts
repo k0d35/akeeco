@@ -4,7 +4,7 @@ export const environment = {
     enabled: true,
     pickupEnabled: true,
     dropoffEnabled: true,
-    apiKey: 'AIzaSyA1c14jPqP-DjzRsLrgC8f_duCmcMIJLjk',
+    apiKey: 'TBH',
     minQueryLength: 3,
     maxSuggestions: 4,
     regionCodes: ['jm'],
