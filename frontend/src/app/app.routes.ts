@@ -13,14 +13,14 @@ export const APP_ROUTES: Routes = [
       {
         path: 'trips',
         children: [
-          { path: '', loadComponent: () => import('./features/trips/trips-list.page').then(m => m.TripsListPageComponent) },
-          { path: 'drafts', loadComponent: () => import('./features/trips/drafts/drafts-list.page').then(m => m.DraftsListPageComponent) },
-          { path: 'new', loadChildren: () => import('./features/trips/create-wizard/trip-wizard.routes').then(m => m.TRIP_WIZARD_ROUTES) }
+          { path: '', loadComponent: () => import('./features/staff/trips/trips-list.page').then(m => m.TripsListPageComponent) },
+          { path: 'drafts', loadComponent: () => import('./features/staff/trips/drafts/drafts-list.page').then(m => m.DraftsListPageComponent) },
+          { path: 'new', loadChildren: () => import('./features/staff/trips/create-wizard/trip-wizard.routes').then(m => m.TRIP_WIZARD_ROUTES) }
         ]
       },
       { path: '**', redirectTo: 'trips' }
     ]
   },
-  { path: '', pathMatch: 'full', redirectTo: 'staff/login' },
-  { path: '**', redirectTo: 'staff/login' }
+  { path: '', loadChildren: () => import('./features/public/public.routes').then(m => m.PUBLIC_ROUTES) },
+  { path: '**', redirectTo: '' }
 ];

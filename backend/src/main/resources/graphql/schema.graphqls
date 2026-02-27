@@ -50,7 +50,8 @@ type Mutation {
   deleteTripDraft(id: ID!): Boolean!
   submitTripDraft(id: ID!): Boolean!
 
-  acquireDraftLock(draftId: ID!): DraftLock!
+  acquireDraftLock(draftId: ID!, userId: String!, userName: String!): DraftLock!
   renewDraftLock(draftId: ID!, token: String!): DraftLock!
   releaseDraftLock(draftId: ID!, token: String!): Boolean!
+  forceReleaseDraftLock(draftId: ID!): Boolean!
 }

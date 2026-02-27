@@ -66,11 +66,18 @@ public class DraftGraphqlController {
   public DraftLock draftLockStatus(@Argument String draftId) { return lockService.status(draftId); }
 
   @MutationMapping
-  public DraftLock acquireDraftLock(@Argument String draftId) { return lockService.acquire(draftId, "u-demo-1", "Dispatcher Demo"); }
+  public DraftLock acquireDraftLock(@Argument String draftId,
+                                    @Argument String userId,
+                                    @Argument String userName) {
+    return lockService.acquire(draftId, userId, userName);
+  }
 
   @MutationMapping
   public DraftLock renewDraftLock(@Argument String draftId, @Argument String token) { return lockService.renew(draftId, token); }
 
   @MutationMapping
   public boolean releaseDraftLock(@Argument String draftId, @Argument String token) { return lockService.release(draftId, token); }
+
+  @MutationMapping
+  public boolean forceReleaseDraftLock(@Argument String draftId) { return lockService.forceRelease(draftId); }
 }

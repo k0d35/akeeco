@@ -22,5 +22,5 @@ import { Router } from '@angular/router';
 })
 export class LoginPageComponent{
   constructor(private router: Router){}
-  go(){ this.router.navigateByUrl('/app/trips'); }
+  go(){ this.router.navigateByUrl('/staff/trips'); }
 }

@@ -68,6 +68,14 @@ public class RedisLockService implements LockService {
     return true;
   }
 
+  @Override
+  public boolean forceRelease(String draftId) {
+    String existing = redis.opsForValue().get(key(draftId));
+    if (existing == null) return true;
+    redis.delete(key(draftId));
+    return true;
+  }
+
   private DraftLock fromValue(String value, String draftId) {
     if (value == null) return null;
     String[] parts = value.split("\\|", 4);

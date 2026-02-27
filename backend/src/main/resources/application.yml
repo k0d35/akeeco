@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: sunisland-backend
+    name: sun-island-tours-api
   data:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017/sunisland}
@@ -17,3 +17,19 @@ management:
     web:
       exposure:
         include: health,info
+
+booking:
+  change-window-hours: ${BOOKING_CHANGE_WINDOW_HOURS:6}
+  cancel-window-hours: ${BOOKING_CANCEL_WINDOW_HOURS:3}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:replace-with-at-least-32-characters-secret}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:43200}
+
+app:
+  public-base-url: ${PUBLIC_BASE_URL:http://localhost:8081}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -10,6 +10,14 @@ export const STAFF_ROUTES: Routes = [
     loadComponent: () => import('./staff-shell.component').then(m => m.StaffPortalShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'trips',
+        children: [
+          { path: '', loadComponent: () => import('./trips/trips-list.page').then(m => m.TripsListPageComponent) },
+          { path: 'drafts', loadComponent: () => import('./trips/drafts/drafts-list.page').then(m => m.DraftsListPageComponent) },
+          { path: 'new', loadChildren: () => import('./trips/create-wizard/trip-wizard.routes').then(m => m.TRIP_WIZARD_ROUTES) }
+        ]
+      },
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard.page').then(m => m.StaffDashboardPageComponent) },
       { path: 'bookings', loadComponent: () => import('./pages/bookings.page').then(m => m.StaffBookingsPageComponent) },
       { path: 'bookings/:id', loadComponent: () => import('./pages/booking-detail.page').then(m => m.StaffBookingDetailPageComponent) },
@@ -27,4 +35,3 @@ export const STAFF_ROUTES: Routes = [
     ],
   },
 ];
-
