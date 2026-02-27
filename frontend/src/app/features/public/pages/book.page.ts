@@ -1,11 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { debounceTime, Subscription } from 'rxjs';
 import { PublicBookingService } from '../data/public-booking.service';
 import { PublicPricingService } from '../data/public-pricing.service';
+import { EstimateBreakdown, PublicBooking, VehicleClassApi } from '../data/public.models';
 
 type StepKey = 'TRIP' | 'AIRPORT' | 'RIDER' | 'VEHICLE' | 'SUMMARY' | 'PAYMENT' | 'CONFIRM';
+type UiVehicleClass = 'SEDAN' | 'SUV' | 'VAN' | 'LIMO';
+type UiAddonCode = 'EXTRA_STOP' | 'CHILD_SEAT' | 'MEET_GREET' | 'LUGGAGE_ASSIST' | 'WAITING_BUFFER';
 
 @Component({
   standalone: true,
@@ -22,11 +26,9 @@ type StepKey = 'TRIP' | 'AIRPORT' | 'RIDER' | 'VEHICLE' | 'SUMMARY' | 'PAYMENT' 
           <ng-container [ngSwitch]="current">
             <div *ngSwitchCase="'TRIP'" class="grid">
               <label class="fldLbl"><i class="bi bi-geo-alt"></i> Pickup address</label>
-              <input class="in" formControlName="pickupAddress" placeholder="Pickup address" (input)="suggest('pickupAddress')" />
-              <div class="ac" *ngIf="pickupSuggestions.length"><button type="button" *ngFor="let s of pickupSuggestions" (click)="pickSuggestion('pickupAddress', s)">{{ s }}</button></div>
+              <input class="in" formControlName="pickupAddress" placeholder="Pickup address" />
               <label class="fldLbl"><i class="bi bi-sign-turn-right"></i> Drop-off address</label>
-              <input class="in" formControlName="dropoffAddress" placeholder="Drop-off address" (input)="suggest('dropoffAddress')" />
-              <div class="ac" *ngIf="dropoffSuggestions.length"><button type="button" *ngFor="let s of dropoffSuggestions" (click)="pickSuggestion('dropoffAddress', s)">{{ s }}</button></div>
+              <input class="in" formControlName="dropoffAddress" placeholder="Drop-off address" />
               <label class="fldLbl"><i class="bi bi-calendar-date"></i> Pickup date</label>
               <input class="in" type="date" formControlName="pickupDate" />
               <label class="fldLbl"><i class="bi bi-clock"></i> Pickup time</label>
@@ -80,47 +82,48 @@ type StepKey = 'TRIP' | 'AIRPORT' | 'RIDER' | 'VEHICLE' | 'SUMMARY' | 'PAYMENT' 
               <label><input type="checkbox" [checked]="addOns.has('CHILD_SEAT')" (change)="toggleAddOn('CHILD_SEAT',$event)" /> Child seat</label>
               <label><input type="checkbox" [checked]="addOns.has('MEET_GREET')" (change)="toggleAddOn('MEET_GREET',$event)" /> Meet & greet</label>
               <label><input type="checkbox" [checked]="addOns.has('LUGGAGE_ASSIST')" (change)="toggleAddOn('LUGGAGE_ASSIST',$event)" /> Luggage assist</label>
-              <label><input type="checkbox" [checked]="addOns.has('WAIT_BUFFER')" (change)="toggleAddOn('WAIT_BUFFER',$event)" /> Waiting buffer</label>
+              <label><input type="checkbox" [checked]="addOns.has('WAITING_BUFFER')" (change)="toggleAddOn('WAITING_BUFFER',$event)" /> Waiting buffer</label>
+              <small *ngIf="estimateError" class="err">{{ estimateError }}</small>
             </div>
 
             <div *ngSwitchCase="'PAYMENT'" class="grid">
               <label class="checkLbl"><input type="radio" formControlName="paymentMode" value="PAY_NOW" /> <i class="bi bi-credit-card"></i> Pay now</label>
               <label class="checkLbl"><input type="radio" formControlName="paymentMode" value="PAY_ON_ARRIVAL" /> <i class="bi bi-cash"></i> Pay on arrival</label>
               <div class="card p2" *ngIf="form.value.paymentMode==='PAY_NOW'">
-                <input class="in" placeholder="Card field (hosted field mock)" />
-                <button class="btn secondary" type="button" (click)="generateToken()">Generate Token</button>
-                <small>{{ paymentToken || 'No token yet' }}</small>
+                <input class="in" placeholder="Payment token reference" [value]="paymentToken" (input)="paymentToken = $any($event.target).value" />
+                <small>{{ paymentToken || 'Token required for PAY_NOW' }}</small>
               </div>
             </div>
 
             <div *ngSwitchCase="'CONFIRM'" class="grid">
-              <div class="card p2" *ngIf="confirmationCode; else preConfirm">
-                <h3>Booking Confirmed</h3>
-                <p>Confirmation: <b>{{ confirmationCode }}</b></p>
-                <p>You will receive SMS/email driver updates.</p>
-                <a class="btn" [routerLink]="['/manage-booking']" [queryParams]="{ code: confirmationCode }">Manage Booking</a>
+              <div class="card p2" *ngIf="createdBooking; else preConfirm">
+                <h3>Booking Submitted</h3>
+                <p>Confirmation: <b>{{ createdBooking.confirmationCode }}</b></p>
+                <p>Status: {{ createdBooking.status }}</p>
+                <a class="btn" [routerLink]="['/manage-booking']" [queryParams]="{ code: createdBooking.confirmationCode, token: createdBooking.manageToken }">Manage Booking</a>
               </div>
               <ng-template #preConfirm><p>Review and confirm your booking.</p></ng-template>
+              <small *ngIf="submitError" class="err">{{ submitError }}</small>
             </div>
           </ng-container>
         </form>
 
         <div class="nav">
-          <button class="btn secondary" type="button" [disabled]="step===0" (click)="back()">Back</button>
-          <button class="btn" type="button" *ngIf="current!=='CONFIRM'" (click)="next()">{{ current==='PAYMENT' ? 'Review Confirmation' : 'Next' }}</button>
-          <button class="btn" type="button" *ngIf="current==='CONFIRM' && !confirmationCode" (click)="confirm()">Confirm Booking</button>
+          <button class="btn secondary" type="button" [disabled]="step===0 || submitting" (click)="back()">Back</button>
+          <button class="btn" type="button" *ngIf="current!=='CONFIRM'" [disabled]="submitting" (click)="next()">{{ current==='PAYMENT' ? 'Review Confirmation' : 'Next' }}</button>
+          <button class="btn" type="button" *ngIf="current==='CONFIRM' && !createdBooking" [disabled]="submitting" (click)="confirm()">{{ submitting ? 'Submitting...' : 'Confirm Booking' }}</button>
         </div>
       </section>
 
       <aside class="card p summary">
         <h3>Current Summary</h3>
-        <div><b>Pickup:</b> {{ form.value.pickupAddress || '—' }}</div>
-        <div><b>Drop-off:</b> {{ form.value.dropoffAddress || '—' }}</div>
+        <div><b>Pickup:</b> {{ form.value.pickupAddress || '-' }}</div>
+        <div><b>Drop-off:</b> {{ form.value.dropoffAddress || '-' }}</div>
         <div><b>Date/Time:</b> {{ form.value.pickupDate }} {{ form.value.pickupTime }}</div>
         <div><b>Vehicle:</b> {{ nameFor(form.value.vehicleClass || 'SEDAN') }}</div>
         <div><b>Add-ons:</b> {{ addOnListText }}</div>
         <hr />
-        <div><b>Estimate:</b> {{ estimate.total | currency:'USD' }}</div>
+        <div><b>Estimate:</b> {{ (estimate?.total ?? 0) | currency:(estimate?.currency || 'USD') }}</div>
       </aside>
     </div>
   `,
@@ -134,21 +137,21 @@ type StepKey = 'TRIP' | 'AIRPORT' | 'RIDER' | 'VEHICLE' | 'SUMMARY' | 'PAYMENT' 
     .grid{ display:grid; gap:8px; }
     .fldLbl{ font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px; color:var(--fg); }
     .checkLbl{ display:flex; align-items:center; gap:8px; font-weight:700; color:var(--fg); }
-    .ac{ display:grid; gap:4px; margin-top:-4px; }
-    .ac button{ text-align:left; border:1px solid var(--border); border-radius:8px; background:#fff; padding:8px; cursor:pointer; }
     .opt{ padding:10px; display:grid; gap:3px; cursor:pointer; }
     .p2{ padding:10px; }
     .nav{ margin-top:10px; display:flex; justify-content:space-between; gap:8px; }
     .summary{ position:sticky; top:86px; }
+    .err{ color:var(--danger); }
     @media (max-width:980px){ .layout{ grid-template-columns:1fr; } .summary{ position:static; } }
   `]
 })
-export class BookPageComponent implements OnInit {
+export class BookPageComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private bookingSvc = inject(PublicBookingService);
   private pricing = inject(PublicPricingService);
+  private sub = new Subscription();
 
   form = this.fb.group({
     pickupAddress: ['', Validators.required],
@@ -169,122 +172,198 @@ export class BookPageComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     whatsapp: [''],
     notes: [''],
-    vehicleClass: ['SEDAN', Validators.required],
+    vehicleClass: ['SEDAN' as UiVehicleClass, Validators.required],
     paymentMode: ['PAY_NOW', Validators.required],
   });
 
   baseSteps: StepKey[] = ['TRIP', 'RIDER', 'VEHICLE', 'SUMMARY', 'PAYMENT', 'CONFIRM'];
   step = 0;
-  addOns = new Set<string>();
+  addOns = new Set<UiAddonCode>();
   paymentToken = '';
-  confirmationCode = '';
-  pickupSuggestions: string[] = [];
-  dropoffSuggestions: string[] = [];
+  createdBooking: PublicBooking | null = null;
+  submitting = false;
+  submitError = '';
+  estimateError = '';
+  estimate: EstimateBreakdown | null = null;
 
   get visibleSteps(): StepKey[] {
-    const airport = this.requiresAirportStep;
-    return airport ? ['TRIP', 'AIRPORT', 'RIDER', 'VEHICLE', 'SUMMARY', 'PAYMENT', 'CONFIRM'] : this.baseSteps;
+    return this.requiresAirportStep
+      ? ['TRIP', 'AIRPORT', 'RIDER', 'VEHICLE', 'SUMMARY', 'PAYMENT', 'CONFIRM']
+      : this.baseSteps;
   }
-  get current(): StepKey { return this.visibleSteps[this.step]; }
+
+  get current(): StepKey {
+    return this.visibleSteps[this.step];
+  }
+
   get requiresAirportStep(): boolean {
     const p = String(this.form.value.pickupAddress || '').toLowerCase();
     const d = String(this.form.value.dropoffAddress || '').toLowerCase();
     return !!this.form.value.airportTransfer || p.includes('airport') || d.includes('airport');
   }
 
-  get estimate() {
-    return this.pricing.computeEstimate({
-      vehicleClass: this.form.value.vehicleClass || 'SEDAN',
-      distanceKm: 16,
-      durationMin: 34,
-      airportTransfer: this.requiresAirportStep,
-      addOns: Array.from(this.addOns),
-    });
+  get addOnListText(): string {
+    return this.addOns.size ? Array.from(this.addOns).join(', ') : 'None';
   }
-
-  get addOnListText(): string { return this.addOns.size ? Array.from(this.addOns).join(', ') : 'None'; }
 
   ngOnInit(): void {
     const q = this.route.snapshot.queryParams;
     if (q['pickup']) this.form.patchValue({ pickupAddress: q['pickup'] });
     if (q['dropoff']) this.form.patchValue({ dropoffAddress: q['dropoff'] });
-    if (q['vehicle']) this.form.patchValue({ vehicleClass: q['vehicle'] });
+    if (q['vehicleClass']) this.form.patchValue({ vehicleClass: this.fromApiVehicleClass(q['vehicleClass']) });
     if (q['pickupDateTime']) {
-      const [date, time] = String(q['pickupDateTime']).split('T');
-      if (date) this.form.patchValue({ pickupDate: date });
-      if (time) this.form.patchValue({ pickupTime: time.slice(0, 5) });
+      const dt = new Date(q['pickupDateTime']);
+      if (!Number.isNaN(dt.getTime())) {
+        this.form.patchValue({
+          pickupDate: dt.toISOString().slice(0, 10),
+          pickupTime: dt.toISOString().slice(11, 16),
+        });
+      }
     }
+
     const draft = this.bookingSvc.loadDraft<any>();
-    if (draft) this.form.patchValue(draft);
-    this.form.valueChanges.subscribe((v) => this.bookingSvc.saveDraft(v));
+    if (draft) {
+      this.form.patchValue(draft.form ?? draft);
+      if (Array.isArray(draft.addOns)) {
+        this.addOns = new Set<UiAddonCode>(draft.addOns);
+      }
+    }
+
+    this.sub.add(
+      this.form.valueChanges.pipe(debounceTime(300)).subscribe((v) => {
+        this.bookingSvc.saveDraft({ form: v, addOns: Array.from(this.addOns) });
+        this.refreshEstimate();
+      })
+    );
+    this.refreshEstimate();
   }
 
-  suggest(control: 'pickupAddress' | 'dropoffAddress') {
-    const v = String(this.form.get(control)?.value || '').trim();
-    const data = [
-      `${v} Montego Bay`, `${v} Airport Road`, `${v} Rose Hall`, `${v} Negril`,
-    ].filter(x => v && x.length > v.length).slice(0, 4);
-    if (control === 'pickupAddress') this.pickupSuggestions = data;
-    else this.dropoffSuggestions = data;
-  }
-  pickSuggestion(control: 'pickupAddress' | 'dropoffAddress', s: string) {
-    this.form.get(control)?.setValue(s);
-    if (control === 'pickupAddress') this.pickupSuggestions = [];
-    else this.dropoffSuggestions = [];
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
   }
 
-  toggleAddOn(key: string, ev: Event) {
+  toggleAddOn(key: UiAddonCode, ev: Event) {
     const on = (ev.target as HTMLInputElement).checked;
-    if (on) this.addOns.add(key); else this.addOns.delete(key);
-  }
-
-  generateToken() {
-    this.paymentToken = `tok_mock_${Math.random().toString(36).slice(2, 12)}`;
+    if (on) this.addOns.add(key);
+    else this.addOns.delete(key);
+    this.bookingSvc.saveDraft({ form: this.form.getRawValue(), addOns: Array.from(this.addOns) });
+    this.refreshEstimate();
   }
 
   next() {
     if (this.step >= this.visibleSteps.length - 1) return;
     this.step += 1;
   }
-  back() { if (this.step > 0) this.step -= 1; }
+
+  back() {
+    if (this.step > 0) this.step -= 1;
+  }
 
   confirm() {
+    this.submitError = '';
     const v = this.form.getRawValue();
-    const booking = this.bookingSvc.create({
+    if (!v.pickupDate || !v.pickupTime) {
+      this.submitError = 'Pickup date and time are required.';
+      return;
+    }
+    if (v.paymentMode === 'PAY_NOW' && !this.paymentToken.trim()) {
+      this.submitError = 'Payment token is required for PAY_NOW.';
+      return;
+    }
+    const pickupDateTime = `${v.pickupDate}T${v.pickupTime}:00`;
+    const returnDateTime = v.roundTrip && v.returnDate && v.returnTime ? `${v.returnDate}T${v.returnTime}:00` : undefined;
+
+    this.submitting = true;
+    this.bookingSvc.create({
       pickupAddress: v.pickupAddress!,
       dropoffAddress: v.dropoffAddress!,
-      pickupDate: v.pickupDate!,
-      pickupTime: v.pickupTime!,
+      pickupDateTime: new Date(pickupDateTime).toISOString(),
       roundTrip: !!v.roundTrip,
-      returnDate: v.returnDate || undefined,
-      returnTime: v.returnTime || undefined,
+      returnDateTime: returnDateTime ? new Date(returnDateTime).toISOString() : undefined,
       airportTransfer: this.requiresAirportStep,
       flightNumber: v.flightNumber || undefined,
       airline: v.airline || undefined,
       terminal: v.terminal || undefined,
-      flightDirection: (v.flightDirection as any) || 'ARRIVING',
+      airportDirection: (v.flightDirection as 'ARRIVING' | 'DEPARTING') || 'ARRIVING',
       firstName: v.firstName!,
       lastName: v.lastName!,
       phone: v.phone!,
       email: v.email!,
-      whatsapp: v.whatsapp || undefined,
-      notes: v.notes || undefined,
-      vehicleClass: v.vehicleClass!,
-      addOns: Array.from(this.addOns),
-      estimate: this.estimate.total,
-      paymentMode: (v.paymentMode as any) || 'PAY_NOW',
-      paymentToken: this.paymentToken || undefined,
+      whatsApp: v.whatsapp || undefined,
+      notesToDriver: v.notes || undefined,
+      vehicleClass: this.toApiVehicleClass(v.vehicleClass as UiVehicleClass),
+      selectedAddons: Array.from(this.addOns).map((addonCode) => ({ addonCode, quantity: 1 })),
+      paymentMode: (v.paymentMode as 'PAY_NOW' | 'PAY_ON_ARRIVAL') || 'PAY_NOW',
+      paymentTokenRef: this.paymentToken || undefined,
+    }).subscribe({
+      next: (booking) => {
+        this.createdBooking = booking;
+        this.submitting = false;
+        this.bookingSvc.clearDraft();
+        this.step = this.visibleSteps.length - 1;
+      },
+      error: (err) => {
+        this.submitting = false;
+        this.submitError = err?.error?.message || 'Unable to create booking right now.';
+      }
     });
-    this.confirmationCode = booking.confirmationCode;
-    this.step = this.visibleSteps.length - 1;
+  }
+
+  private refreshEstimate() {
+    const v = this.form.getRawValue();
+    if (!v.pickupAddress || !v.dropoffAddress || !v.pickupDate || !v.pickupTime) {
+      return;
+    }
+    const pickupDateTime = new Date(`${v.pickupDate}T${v.pickupTime}:00`).toISOString();
+    this.pricing.estimate({
+      pickupAddress: v.pickupAddress,
+      dropoffAddress: v.dropoffAddress,
+      pickupDateTime,
+      vehicleClass: this.toApiVehicleClass((v.vehicleClass || 'SEDAN') as UiVehicleClass),
+      airportTransfer: this.requiresAirportStep,
+      selectedAddons: Array.from(this.addOns).map((addonCode) => ({ addonCode, quantity: 1 })),
+    }).subscribe({
+      next: (estimate) => {
+        this.estimate = estimate;
+        this.estimateError = '';
+      },
+      error: () => {
+        this.estimateError = 'Estimate unavailable at the moment.';
+      }
+    });
+  }
+
+  private toApiVehicleClass(v: UiVehicleClass): VehicleClassApi {
+    const map: Record<UiVehicleClass, VehicleClassApi> = {
+      SEDAN: 'EXECUTIVE_SEDAN',
+      SUV: 'LUXURY_SUV',
+      VAN: 'VAN',
+      LIMO: 'STRETCH_LIMO',
+    };
+    return map[v] ?? 'EXECUTIVE_SEDAN';
+  }
+
+  private fromApiVehicleClass(v: string): UiVehicleClass {
+    const map: Record<string, UiVehicleClass> = {
+      EXECUTIVE_SEDAN: 'SEDAN',
+      LUXURY_SUV: 'SUV',
+      VAN: 'VAN',
+      STRETCH_LIMO: 'LIMO',
+      SEDAN: 'SEDAN',
+      SUV: 'SUV',
+      LIMO: 'LIMO',
+    };
+    return map[v] ?? 'SEDAN';
   }
 
   nameFor(v: string): string {
     const m: Record<string, string> = { SEDAN: 'Executive Sedan', SUV: 'Luxury SUV', VAN: 'Van', LIMO: 'Stretch Limo' };
     return m[v] || v;
   }
+
   metaFor(v: string): string {
     const m: Record<string, string> = { SEDAN: 'Up to 3 passengers', SUV: 'Up to 6 passengers', VAN: 'Up to 10 passengers', LIMO: 'Premium event class' };
     return m[v] || '';
   }
 }
+

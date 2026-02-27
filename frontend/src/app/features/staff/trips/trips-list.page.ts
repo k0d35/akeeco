@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { TenantPresenceHubService } from '../../../core/presence/tenant-presence-hub.service';
 import { presenceForEntity } from '../../../core/presence/presence-dots.util';
 import { AuthService } from '../../../shared-data/auth/auth.service';
+import { BookingsService } from '../data/bookings.service';
 
 interface TripRow {
   id: string;
@@ -118,19 +119,25 @@ interface TripRow {
 export class TripsListPageComponent implements OnInit {
   private hub = inject(TenantPresenceHubService);
   private auth = inject(AuthService);
+  private bookings = inject(BookingsService);
 
-  trips: TripRow[] = [
-    { id: 'T1001', status: 'INACTIVE', customerName: 'John Brown',     pickupText: 'MBJ Airport',   pickupDateTime: '2026-02-09 14:30' },
-    { id: 'T1002', status: 'INACTIVE', customerName: 'Mark Swiney', pickupText: 'Resort pickup', pickupDateTime: '2026-02-09 15:10' },
-    { id: 'T1002', status: 'INACTIVE', customerName: 'BigOnes Bus Tours', pickupText: '', pickupDateTime: '2026-02-09 15:10' },
-    { id: 'T1002', status: 'INACTIVE', customerName: 'ACME Logistics', pickupText: 'Resort pickup', pickupDateTime: '2026-02-09 15:10' },
-  ];
+  trips: TripRow[] = [];
 
   presenceByEntity = toSignal(this.hub.presenceByEntity$, { initialValue: {} as Record<string, any[]> });
 
   ngOnInit(): void {
     const tenantId = this.auth.user().tenantId;
     this.hub.connect(tenantId);
+    this.bookings.refresh();
+    this.bookings.bookings$.subscribe((rows) => {
+      this.trips = rows.map((b) => ({
+        id: b.id,
+        status: b.status,
+        customerName: b.customerName,
+        pickupText: b.pickupLocation,
+        pickupDateTime: new Date(b.pickupTime).toLocaleString(),
+      }));
+    });
   }
 
   presenceForTrip(tripId: string) {

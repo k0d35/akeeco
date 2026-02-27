@@ -70,21 +70,37 @@ export class StaffBookingDetailPageComponent {
   vehicleId = this.booking?.assignedVehicleId || '';
   tag = '';
 
+  constructor() {
+    const id = this.route.snapshot.paramMap.get('id') || '';
+    if (!this.booking && id) {
+      this.bookings.fetchById(id).subscribe((b) => {
+        this.booking = b || undefined;
+        this.logs = this.booking ? this.comms.listLogs(this.booking.id) : [];
+        this.driverId = this.booking?.assignedDriverId || '';
+        this.vehicleId = this.booking?.assignedVehicleId || '';
+      });
+    }
+  }
+
   get timelineItems() {
     return (this.booking?.statusHistory || []).map(h => ({ title: `${h.from || '—'} → ${h.to} (${h.user})`, time: new Date(h.timestamp).toLocaleString(), subtitle: h.note }));
   }
 
   assign() {
     if (!this.booking) return;
-    this.bookings.assignDriverVehicle(this.booking.id, this.driverId || undefined, this.vehicleId || undefined);
-    this.refresh();
-    this.toast.show('Assignment saved.', 'success');
+    this.bookings.assignDriverVehicle(this.booking.id, this.driverId || undefined, this.vehicleId || undefined).subscribe((ok) => {
+      if (!ok) { this.toast.show('Assignment failed.', 'error'); return; }
+      this.refresh();
+      this.toast.show('Assignment saved.', 'success');
+    });
   }
   setStatus(status: any) {
     if (!this.booking) return;
-    this.bookings.setStatus(this.booking.id, status);
-    this.refresh();
-    this.toast.show(`Status updated to ${status}.`, 'success');
+    this.bookings.setStatus(this.booking.id, status).subscribe((ok) => {
+      if (!ok) { this.toast.show(`Status update failed.`, 'error'); return; }
+      this.refresh();
+      this.toast.show(`Status updated to ${status}.`, 'success');
+    });
   }
   addTag() {
     if (!this.booking || !this.tag.trim()) return;
@@ -99,8 +115,16 @@ export class StaffBookingDetailPageComponent {
     this.toast.show('Template sent.', 'success');
   }
   private refresh() {
-    this.booking = this.bookings.getById(this.route.snapshot.paramMap.get('id') || '');
-    this.logs = this.booking ? this.comms.listLogs(this.booking.id) : [];
+    const id = this.route.snapshot.paramMap.get('id') || '';
+    const cached = this.bookings.getById(id);
+    if (cached) {
+      this.booking = cached;
+      this.logs = this.booking ? this.comms.listLogs(this.booking.id) : [];
+      return;
+    }
+    this.bookings.fetchById(id).subscribe((b) => {
+      this.booking = b || undefined;
+      this.logs = this.booking ? this.comms.listLogs(this.booking.id) : [];
+    });
   }
 }
-

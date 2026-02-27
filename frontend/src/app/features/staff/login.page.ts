@@ -17,7 +17,7 @@ import { AuthService } from '../../shared-data/auth/auth.service';
         <label>Password</label>
         <input class="in" formControlName="password" type="password" />
         <small class="err" *ngIf="error">{{ error }}</small>
-        <button class="btn" type="submit">Sign in</button>
+        <button class="btn" type="submit" [disabled]="loading">{{ loading ? 'Signing in...' : 'Sign in' }}</button>
         <p class="hint">Demo users: admin@company.com / dispatch@company.com / driver@company.com</p>
       </form>
     </div>
@@ -38,6 +38,7 @@ export class StaffLoginPageComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   error = '';
+  loading = false;
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -46,9 +47,12 @@ export class StaffLoginPageComponent {
 
   submit() {
     if (this.form.invalid) return;
-    const res = this.auth.login(this.form.value.email!, this.form.value.password!);
-    if (!res.ok) { this.error = res.message; return; }
-    this.router.navigateByUrl('/staff/dashboard');
+    this.error = '';
+    this.loading = true;
+    this.auth.login(this.form.value.email!, this.form.value.password!).subscribe((res) => {
+      this.loading = false;
+      if (!res.ok) { this.error = res.message; return; }
+      this.router.navigateByUrl('/staff/dashboard');
+    });
   }
 }
-

@@ -1,12 +1,13 @@
 export interface VehicleClass {
   id: string;
+  code?: string;
   name: string;
   seats: number;
   luggage: number;
   amenities: string[];
-  fromPrice: number;
   recommendedFor: string[];
-  imageUrl: string;
+  fromPrice?: number;
+  imageUrl?: string;
 }
 
 export interface Testimonial {
@@ -22,33 +23,55 @@ export interface FaqItem {
   a: string;
 }
 
+export type VehicleClassApi = 'EXECUTIVE_SEDAN' | 'LUXURY_SUV' | 'VAN' | 'STRETCH_LIMO';
+export type PaymentMode = 'PAY_NOW' | 'PAY_ON_ARRIVAL';
+export type BookingStatus = 'REQUESTED' | 'CONFIRMED' | 'ASSIGNED' | 'EN_ROUTE' | 'ARRIVED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+
+export interface EstimateBreakdown {
+  distanceKm: number;
+  durationMinutes: number;
+  baseFare: number;
+  distanceFare: number;
+  timeFare: number;
+  addonsTotal: number;
+  surgeMultiplier: number;
+  feesTotal: number;
+  total: number;
+  currency: string;
+}
+
 export interface PublicBooking {
   id: string;
   confirmationCode: string;
-  createdAt: string;
+  manageToken?: string;
+  manageUrl?: string;
+  status: BookingStatus;
   pickupAddress: string;
   dropoffAddress: string;
-  pickupDate: string;
-  pickupTime: string;
+  pickupDateTime: string;
   roundTrip: boolean;
-  returnDate?: string;
-  returnTime?: string;
-  airportTransfer: boolean;
-  flightNumber?: string;
-  airline?: string;
-  terminal?: string;
-  flightDirection?: 'ARRIVING' | 'DEPARTING';
+  returnDateTime?: string;
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
-  whatsapp?: string;
-  notes?: string;
-  vehicleClass: string;
-  addOns: string[];
-  estimate: number;
-  paymentMode: 'PAY_NOW' | 'PAY_ON_ARRIVAL';
-  paymentToken?: string;
-  status: 'CONFIRMED' | 'CANCELLED';
+  vehicleClass: VehicleClassApi;
+  estimate?: EstimateBreakdown;
+  finalTotal?: number;
+  paymentMode: PaymentMode;
 }
 
+export interface ApiEnvelope<T> {
+  timestamp: string;
+  correlationId: string;
+  data: T;
+}
+
+export interface ApiError {
+  timestamp: string;
+  status: number;
+  error: string;
+  message: string;
+  correlationId: string;
+  fieldErrors?: Record<string, string>;
+}

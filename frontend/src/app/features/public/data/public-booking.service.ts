@@ -1,102 +1,93 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { PublicBooking } from './public.models';
+import { HttpClient } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ApiEnvelope, PublicBooking, VehicleClassApi } from './public.models';
 
-const BOOKINGS_KEY = 'bookings';
-const QUEUE_KEY = 'public_bookings_queue';
 const DRAFT_KEY = 'public_booking_draft';
+
+type AddonCode = 'EXTRA_STOP' | 'CHILD_SEAT' | 'MEET_GREET' | 'LUGGAGE_ASSIST' | 'WAITING_BUFFER';
+
+export interface CreateBookingPayload {
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupDateTime: string;
+  roundTrip: boolean;
+  returnDateTime?: string;
+  airportTransfer: boolean;
+  flightNumber?: string;
+  airline?: string;
+  terminal?: string;
+  airportDirection?: 'ARRIVING' | 'DEPARTING';
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  whatsApp?: string;
+  notesToDriver?: string;
+  vehicleClass: VehicleClassApi;
+  selectedAddons: Array<{ addonCode: AddonCode; quantity: number }>;
+  paymentMode: 'PAY_NOW' | 'PAY_ON_ARRIVAL';
+  paymentTokenRef?: string;
+}
+
+export interface UpdateBookingTimePayload {
+  confirmationCode: string;
+  token: string;
+  newPickupDateTime: string;
+  newReturnDateTime?: string;
+}
+
+export interface CancelBookingPayload {
+  confirmationCode: string;
+  token: string;
+  reason?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PublicBookingService {
-  private subject = new BehaviorSubject<PublicBooking[]>(this.loadBookings());
-  bookings$ = this.subject.asObservable();
+  private readonly baseUrl = `${environment.apiBaseUrl}/api/public`;
 
-  list(): PublicBooking[] { return this.subject.value; }
+  constructor(private readonly http: HttpClient) {}
 
-  saveDraft(v: any): void {
+  saveDraft(v: unknown): void {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(v));
   }
 
-  loadDraft<T = any>(): T | null {
-    try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') as T | null; } catch { return null; }
+  loadDraft<T = unknown>(): T | null {
+    try {
+      return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') as T | null;
+    } catch {
+      return null;
+    }
   }
 
-  clearDraft(): void { localStorage.removeItem(DRAFT_KEY); }
-
-  create(payload: Omit<PublicBooking, 'id' | 'confirmationCode' | 'createdAt' | 'status'>): PublicBooking {
-    const next: PublicBooking = {
-      ...payload,
-      id: `PUB-${Math.floor(100000 + Math.random() * 900000)}`,
-      confirmationCode: Math.random().toString(36).slice(2, 8).toUpperCase(),
-      createdAt: new Date().toISOString(),
-      status: 'CONFIRMED',
-    };
-    const rows = [next, ...this.subject.value];
-    this.subject.next(rows);
-    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(rows));
-    this.pushToStaffQueue(next);
-    this.clearDraft();
-    // TODO: Replace with POST /api/public/bookings
-    return next;
+  clearDraft(): void {
+    localStorage.removeItem(DRAFT_KEY);
   }
 
-  getByConfirmation(code: string): PublicBooking | undefined {
-    const q = code.trim().toUpperCase();
-    return this.subject.value.find(b => b.confirmationCode === q);
-    // TODO: Replace with GET /api/public/bookings/manage?code=
+  create(payload: CreateBookingPayload): Observable<PublicBooking> {
+    return this.http.post<ApiEnvelope<PublicBooking>>(`${this.baseUrl}/bookings`, payload).pipe(
+      map((res) => res.data)
+    );
   }
 
-  updatePickupTime(code: string, pickupDate: string, pickupTime: string): boolean {
-    let changed = false;
-    const rows = this.subject.value.map((b) => {
-      if (b.confirmationCode !== code.trim().toUpperCase()) return b;
-      changed = true;
-      return { ...b, pickupDate, pickupTime };
-    });
-    if (!changed) return false;
-    this.subject.next(rows);
-    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(rows));
-    // TODO: Replace with PATCH /api/public/bookings/{confirmationCode}/pickup-time
-    return true;
+  getByManageToken(code: string, token: string): Observable<PublicBooking> {
+    return this.http.get<ApiEnvelope<PublicBooking>>(`${this.baseUrl}/bookings/manage`, {
+      params: { code, token }
+    }).pipe(map((res) => res.data));
   }
 
-  cancel(code: string): boolean {
-    let changed = false;
-    const rows = this.subject.value.map((b) => {
-      if (b.confirmationCode !== code.trim().toUpperCase()) return b;
-      changed = true;
-      return { ...b, status: 'CANCELLED' as const };
-    });
-    if (!changed) return false;
-    this.subject.next(rows);
-    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(rows));
-    // TODO: Replace with PATCH /api/public/bookings/{confirmationCode}/cancel
-    return true;
+  updatePickupTime(payload: UpdateBookingTimePayload): Observable<PublicBooking> {
+    return this.http.patch<ApiEnvelope<PublicBooking>>(`${this.baseUrl}/bookings/manage/time`, payload).pipe(
+      map((res) => res.data)
+    );
   }
 
-  private loadBookings(): PublicBooking[] {
-    try { return JSON.parse(localStorage.getItem(BOOKINGS_KEY) || '[]') as PublicBooking[]; } catch { return []; }
-  }
-
-  private pushToStaffQueue(booking: PublicBooking): void {
-    const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]') as any[];
-    queue.push({
-      id: booking.id,
-      createdAt: booking.createdAt,
-      customerName: `${booking.firstName} ${booking.lastName}`.trim(),
-      email: booking.email,
-      phone: booking.phone,
-      serviceType: booking.airportTransfer ? 'AIRPORT' : 'TOUR',
-      pickupLocation: booking.pickupAddress,
-      dropoffLocation: booking.dropoffAddress,
-      pickupTime: `${booking.pickupDate}T${booking.pickupTime}:00`,
-      passengers: 1,
-      luggage: 0,
-      vehicleTypeRequested: booking.vehicleClass,
-      estimatedPrice: booking.estimate,
-      notes: booking.notes || '',
-    });
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  cancel(payload: CancelBookingPayload): Observable<PublicBooking> {
+    return this.http.post<ApiEnvelope<PublicBooking>>(`${this.baseUrl}/bookings/manage/cancel`, payload).pipe(
+      map((res) => res.data)
+    );
   }
 }
 

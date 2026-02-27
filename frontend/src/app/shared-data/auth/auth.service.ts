@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export type StaffRole = 'ADMIN' | 'DISPATCH' | 'DRIVER';
 
@@ -18,28 +21,13 @@ interface SessionPayload {
 
 const STORAGE_KEY = 'staff_session_v1';
 
-const MOCK_USERS: Array<{ email: string; password: string; user: User }> = [
-  {
-    email: 'admin@company.com',
-    password: 'admin123',
-    user: { id: 'u-admin', tenantId: 't-demo', name: 'Operations Admin', email: 'admin@company.com', role: 'ADMIN' },
-  },
-  {
-    email: 'dispatch@company.com',
-    password: 'dispatch123',
-    user: { id: 'u-dispatch', tenantId: 't-demo', name: 'Dispatch Lead', email: 'dispatch@company.com', role: 'DISPATCH' },
-  },
-  {
-    email: 'driver@company.com',
-    password: 'driver123',
-    user: { id: 'u-driver', tenantId: 't-demo', name: 'Driver One', email: 'driver@company.com', role: 'DRIVER' },
-  },
-];
-
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly authUrl = `${environment.apiBaseUrl}/api/auth/login`;
   private currentUserSubject = new BehaviorSubject<User | null>(this.loadSession()?.user ?? null);
+  private currentToken = this.loadSession()?.token ?? null;
   currentUser$ = this.currentUserSubject.asObservable();
+  constructor(private http: HttpClient) {}
 
   user(): User {
     return this.currentUserSubject.value ?? {
@@ -60,23 +48,41 @@ export class AuthService {
     return !!u && roles.includes(u.role);
   }
 
-  login(email: string, password: string): { ok: true } | { ok: false; message: string } {
-    const hit = MOCK_USERS.find((m) => m.email.toLowerCase() === email.trim().toLowerCase() && m.password === password);
-    if (!hit) return { ok: false, message: 'Invalid credentials.' };
+  token(): string | null {
+    return this.currentToken;
+  }
 
-    const payload: SessionPayload = {
-      token: `mock-token-${hit.user.id}-${Date.now()}`,
-      user: hit.user,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    this.currentUserSubject.next(hit.user);
-
-    // TODO: Replace with real POST /api/auth/login + JWT storage + refresh token rotation.
-    return { ok: true };
+  login(email: string, password: string) {
+    return this.http.post<{ data: { token: string; role: StaffRole; username: string } }>(
+      this.authUrl,
+      { username: email.trim().toLowerCase(), password }
+    ).pipe(
+      map((res) => {
+        const payload: SessionPayload = {
+          token: res.data.token,
+          user: {
+            id: `u-${res.data.username}`,
+            tenantId: 't-demo',
+            name: res.data.username,
+            email: email.trim().toLowerCase(),
+            role: res.data.role,
+          },
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        this.currentToken = payload.token;
+        this.currentUserSubject.next(payload.user);
+        return { ok: true as const };
+      }),
+      catchError((err) => of({
+        ok: false as const,
+        message: err?.error?.message || 'Invalid credentials.',
+      }))
+    );
   }
 
   logout(): void {
     localStorage.removeItem(STORAGE_KEY);
+    this.currentToken = null;
     this.currentUserSubject.next(null);
     // TODO: Call POST /api/auth/logout and revoke refresh token.
   }

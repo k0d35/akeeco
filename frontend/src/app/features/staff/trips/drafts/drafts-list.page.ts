@@ -198,7 +198,7 @@ export class DraftsListPageComponent {
   }
 
   resume(d: TripDraftDto) {
-    this.router.navigate(['/staff/trips/new/customer'], { queryParams: { draftId: d.id } });
+    this.router.navigate(['/staff/trips/new/customer'], { queryParams: { draftId: d.id, resume: '1' } });
   }
 
   remove(d: TripDraftDto) {

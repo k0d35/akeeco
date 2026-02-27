@@ -225,7 +225,9 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
     this._showRestoreBanner.set(false);
     this._conflictBanner.set(false);
 
-    const qpId = this.route.snapshot.queryParamMap.get('draftId');
+    const qp = this.route.snapshot.queryParamMap;
+    const qpId = qp.get('draftId');
+    const autoResume = qp.get('resume') === '1';
 
     if (qpId) {
       this.state.draftId = qpId;
@@ -256,6 +258,9 @@ export class TripCreateWizardShellPageComponent implements OnInit, OnDestroy {
     this.subs.add(roSub);
 
     await this.loadDraftForBanner();
+    if (autoResume) {
+      this.resumeDraft();
+    }
 
     const s = this.form.valueChanges.pipe(debounceTime(900)).subscribe(() => this.autosaveNow());
     this.subs.add(s);

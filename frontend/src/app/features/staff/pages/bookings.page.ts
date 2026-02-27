@@ -19,6 +19,7 @@ import { ToastService } from '../../../shared/ui/toast.service';
       <label><input type="checkbox" [(ngModel)]="unassignedOnly" /> Unassigned only</label>
       <label><input type="checkbox" [(ngModel)]="vipOnly" /> VIP tag</label>
     </div>
+    <div class="empty" *ngIf="loading">Loading bookings...</div>
     <div class="card tableWrap" tabindex="0" aria-label="Bookings table">
       <table class="tbl">
         <thead><tr><th>ID</th><th>Pickup</th><th>Customer</th><th>Service</th><th>Pickup → Dropoff</th><th>Vehicle</th><th>Driver</th><th>Status</th><th>Price</th><th>Actions</th></tr></thead>
@@ -59,17 +60,23 @@ export class StaffBookingsPageComponent {
   private svc = inject(BookingsService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  loading = false;
 
   q = '';
   status = '';
   unassignedOnly = false;
   vipOnly = false;
-  statuses = ['REQUESTED', 'CONFIRMED', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'];
+  statuses = ['REQUESTED', 'CONFIRMED', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'];
+
+  constructor() {
+    this.svc.loading$.subscribe((v) => this.loading = v);
+    this.svc.refresh();
+  }
 
   filtered() {
     return this.svc.list().filter((b) => {
       if (this.status && b.status !== this.status) return false;
-      if (this.unassignedOnly && (b.assignedDriverId && b.assignedVehicleId)) return false;
+      if (this.unassignedOnly && (b.assignedDriverId || b.assignedVehicleId)) return false;
       if (this.vipOnly && !b.tags.includes('VIP')) return false;
       if (!this.q.trim()) return true;
       const q = this.q.toLowerCase();
@@ -78,6 +85,5 @@ export class StaffBookingsPageComponent {
   }
 
   view(id: string) { this.router.navigate(['/staff/bookings', id]); }
-  bulk(action: string) { this.toast.show(`${action} executed (mock).`, 'info'); }
+  bulk(action: string) { this.toast.show(`${action} is not implemented for bulk yet.`, 'info'); }
 }
-
