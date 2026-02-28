@@ -128,7 +128,7 @@ type UiAddonCode = 'EXTRA_STOP' | 'CHILD_SEAT' | 'MEET_GREET' | 'LUGGAGE_ASSIST'
     </div>
   `,
   styles: [`
-    .heroSmall{ padding:52px 0 22px; background:linear-gradient(140deg,var(--color-ocean-900),var(--color-ocean-700)); color:#fff; }
+    .heroSmall{ padding:52px 0 22px; background-image:linear-gradient(140deg, rgba(17,17,17,.7), rgba(31,31,31,.52)), var(--bg-hero-book); background-size:cover; background-position:center; color:#fff; }
     .layout{ margin-top:14px; display:grid; gap:12px; grid-template-columns:1.2fr .8fr; align-items:start; }
     .p{ padding:14px; }
     .stepper{ display:flex; gap:8px; flex-wrap:wrap; font-size:12px; margin-bottom:10px; }
@@ -366,4 +366,3 @@ export class BookPageComponent implements OnInit, OnDestroy {
     return m[v] || '';
   }
 }
-

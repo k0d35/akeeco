@@ -29,7 +29,7 @@ import { Router } from '@angular/router';
       </form>
     </div>
   `,
-  styles: [`.heroSmall{ padding:52px 0 22px; background:linear-gradient(140deg,var(--color-ocean-900),var(--color-ocean-700)); color:#fff; } .grid{ margin-top:14px; display:grid; gap:10px; grid-template-columns:1fr 1fr; } .p{ padding:14px; display:grid; gap:8px; } .p p{ display:flex; align-items:center; gap:8px; margin:0; } .fldLbl{ font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px; color:var(--fg); } @media (max-width:900px){ .grid{ grid-template-columns:1fr; } }`]
+  styles: [`.heroSmall{ padding:52px 0 22px; background-image:linear-gradient(140deg, rgba(17,17,17,.7), rgba(31,31,31,.52)), var(--bg-hero-contact); background-size:cover; background-position:center; color:#fff; } .grid{ margin-top:14px; display:grid; gap:10px; grid-template-columns:1fr 1fr; } .p{ padding:14px; display:grid; gap:8px; } .p p{ display:flex; align-items:center; gap:8px; margin:0; } .fldLbl{ font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px; color:var(--fg); } @media (max-width:900px){ .grid{ grid-template-columns:1fr; } }`]
 })
 export class ContactPageComponent {
   private fb = inject(FormBuilder);

@@ -23,7 +23,15 @@ import { AuthService } from '../../shared-data/auth/auth.service';
     </div>
   `,
   styles: [`
-    .wrap{ min-height:100vh; display:grid; place-items:center; padding:14px; background:#f8fafc; }
+    .wrap{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:14px;
+      background-image: linear-gradient(140deg, rgba(17,17,17,.58), rgba(31,31,31,.42)), var(--bg-staff-login);
+      background-size: cover;
+      background-position: center;
+    }
     .box{ width:min(460px, 100%); padding:16px; display:grid; gap:8px; }
     h1{ margin:0; }
     .sub{ margin:0 0 8px; color:var(--muted); }

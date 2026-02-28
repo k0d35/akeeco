@@ -7,7 +7,12 @@ import { HeroComponent } from '../ui/hero.component';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, HeroComponent],
   template: `
-    <si-hero title="Corporate & VIP" subtitle="Account billing, recurring transfers, priority dispatch, executive standards."></si-hero>
+    <si-hero
+      title="Corporate & VIP"
+      subtitle="Account billing, recurring transfers, priority dispatch, executive standards."
+      heroBg="var(--bg-hero-corporate)"
+      mediaSrc="/assets/images/hero-corporate.svg"
+      mediaAlt="Corporate and VIP transport"></si-hero>
     <div class="container block">
       <div class="card p">
         <h3>Why executives choose us</h3>
@@ -21,10 +26,10 @@ import { HeroComponent } from '../ui/hero.component';
         <textarea class="in" formControlName="needs" placeholder="Volume, service windows, special requirements"></textarea>
         <button class="btn" type="submit">Submit Corporate Request</button>
       </form>
-      <div class="logos"><div class="logo" *ngFor="let i of [1,2,3,4,5]">Brand</div></div>
+      <div class="logos"><div class="logo" *ngFor="let i of [1,2,3,4,5]"><img src="/assets/images/hero-corporate.svg" alt="Partner brand" /></div></div>
     </div>
   `,
-  styles: [`.block{ margin-top:20px; display:grid; gap:10px; } .p{ padding:14px; display:grid; gap:8px; } .logos{ display:grid; gap:8px; grid-template-columns:repeat(5,1fr);} .logo{ height:54px; border:1px solid var(--border); border-radius:10px; display:grid; place-items:center; background:#fff; color:var(--color-text-600); } @media (max-width:1000px){ .logos{ grid-template-columns:repeat(3,1fr);} } @media (max-width:640px){ .logos{ grid-template-columns:repeat(2,1fr);} }`]
+  styles: [`.block{ margin-top:20px; display:grid; gap:10px; } .p{ padding:14px; display:grid; gap:8px; } .logos{ display:grid; gap:8px; grid-template-columns:repeat(5,1fr);} .logo{ height:54px; border:1px solid var(--border); border-radius:10px; display:grid; place-items:center; background:#fff; color:var(--color-text-600); overflow:hidden; } .logo img{ width:100%; height:100%; object-fit:cover; opacity:.82; } @media (max-width:1000px){ .logos{ grid-template-columns:repeat(3,1fr);} } @media (max-width:640px){ .logos{ grid-template-columns:repeat(2,1fr);} }`]
 })
 export class ServiceCorporateVipPageComponent {
   form = new FormBuilder().group({

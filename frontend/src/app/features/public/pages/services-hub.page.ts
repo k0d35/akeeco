@@ -7,7 +7,12 @@ import { HeroComponent } from '../ui/hero.component';
   standalone: true,
   imports: [CommonModule, RouterLink, HeroComponent],
   template: `
-    <si-hero title="Services" subtitle="Premium chauffeur solutions for airport transfers, tours, executive trips and events."></si-hero>
+    <si-hero
+      title="Services"
+      subtitle="Premium chauffeur solutions for airport transfers, tours, executive trips and events."
+      heroBg="var(--bg-hero-services)"
+      mediaSrc="/assets/images/hero-services.svg"
+      mediaAlt="Service categories overview"></si-hero>
     <div class="container grid">
       <article class="card p"><h3>Airport Transfers</h3><p>Flight-aware pickups and MBJ resort routes.</p><a routerLink="/services/airport-transfers" class="btn secondary">Explore</a></article>
       <article class="card p"><h3>Private Tours</h3><p>Custom itineraries across Jamaica highlights.</p><a routerLink="/services/private-tours" class="btn secondary">Explore</a></article>

@@ -9,7 +9,12 @@ import { PublicContentService } from '../data/public-content.service';
   standalone: true,
   imports: [CommonModule, RouterLink, HeroComponent, FaqAccordionComponent],
   template: `
-    <si-hero title="Airport Transfers" subtitle="Reliable MBJ arrivals and departures with polished chauffeur service."></si-hero>
+    <si-hero
+      title="Airport Transfers"
+      subtitle="Reliable MBJ arrivals and departures with polished chauffeur service."
+      heroBg="var(--bg-hero-airport)"
+      mediaSrc="/assets/images/hero-airport.svg"
+      mediaAlt="Airport transfer vehicle"></si-hero>
     <div class="container block">
       <div class="card p">
         <h3>Flight Number Supported Pickups</h3>

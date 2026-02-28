@@ -37,7 +37,7 @@ import { EstimateBreakdown, VehicleClassApi } from '../data/public.models';
       </form>
     </div>
   `,
-  styles: [`.heroSmall{ padding:60px 0 24px; background:linear-gradient(140deg,var(--color-ocean-900),var(--color-ocean-700)); color:#fff; } .block{ display:grid; gap:10px; margin-top:16px; } .p{ padding:14px; display:grid; gap:8px; } .fldLbl{ font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px; color:var(--fg); } .price{ font-weight:900; } .err{ color:var(--danger); }`]
+  styles: [`.heroSmall{ padding:60px 0 24px; background-image:linear-gradient(140deg, rgba(17,17,17,.7), rgba(31,31,31,.52)), var(--bg-hero-pricing); background-size:cover; background-position:center; color:#fff; } .block{ display:grid; gap:10px; margin-top:16px; } .p{ padding:14px; display:grid; gap:8px; } .fldLbl{ font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px; color:var(--fg); } .price{ font-weight:900; } .err{ color:var(--danger); }`]
 })
 export class PricingPageComponent {
   private fb = inject(FormBuilder);
@@ -81,4 +81,3 @@ export class PricingPageComponent {
     this.router.navigate(['/book'], { queryParams: this.form.value });
   }
 }
-

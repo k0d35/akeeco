@@ -4,10 +4,10 @@ import { FaqItem, Testimonial, VehicleClass } from './public.models';
 @Injectable({ providedIn: 'root' })
 export class PublicContentService {
   vehicles: VehicleClass[] = [
-    { id: 'SEDAN', name: 'Executive Sedan', seats: 3, luggage: 2, amenities: ['WiFi', 'Leather Seats', 'Bottled Water'], fromPrice: 55, recommendedFor: ['Airport', 'Corporate'], imageUrl: 'https://placehold.co/800x500' },
-    { id: 'SUV', name: 'Luxury SUV', seats: 6, luggage: 5, amenities: ['WiFi', 'USB Charging', 'A/C'], fromPrice: 85, recommendedFor: ['VIP', 'Family'], imageUrl: 'https://placehold.co/800x500' },
-    { id: 'VAN', name: 'Executive Van', seats: 10, luggage: 10, amenities: ['Cooler', 'A/C', 'Large Cabin'], fromPrice: 120, recommendedFor: ['Group', 'Tours'], imageUrl: 'https://placehold.co/800x500' },
-    { id: 'LIMO', name: 'Stretch Limo', seats: 8, luggage: 4, amenities: ['Mood Lighting', 'Premium Audio', 'Champagne Setup'], fromPrice: 220, recommendedFor: ['Events', 'Weddings'], imageUrl: 'https://placehold.co/800x500' },
+    { id: 'SEDAN', name: 'Executive Sedan', seats: 3, luggage: 2, amenities: ['WiFi', 'Leather Seats', 'Bottled Water'], fromPrice: 55, recommendedFor: ['Airport', 'Corporate'], imageUrl: '/assets/images/fleet-sedan.svg' },
+    { id: 'SUV', name: 'Luxury SUV', seats: 6, luggage: 5, amenities: ['WiFi', 'USB Charging', 'A/C'], fromPrice: 85, recommendedFor: ['VIP', 'Family'], imageUrl: '/assets/images/fleet-suv.svg' },
+    { id: 'VAN', name: 'Executive Van', seats: 10, luggage: 10, amenities: ['Cooler', 'A/C', 'Large Cabin'], fromPrice: 120, recommendedFor: ['Group', 'Tours'], imageUrl: '/assets/images/fleet-van.svg' },
+    { id: 'LIMO', name: 'Stretch Limo', seats: 8, luggage: 4, amenities: ['Mood Lighting', 'Premium Audio', 'Champagne Setup'], fromPrice: 220, recommendedFor: ['Events', 'Weddings'], imageUrl: '/assets/images/fleet-limo.svg' },
   ];
 
   testimonials: Testimonial[] = [

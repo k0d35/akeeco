@@ -14,7 +14,12 @@ import { PublicContentService } from '../data/public-content.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, HeroComponent, WaveDividerComponent, SectionComponent, StepsComponent, VehicleCardComponent, TestimonialCardComponent],
   template: `
-    <si-hero title="Luxury Limo & Island Tours in Montego Bay" subtitle="Airport transfers, VIP chauffeurs, and private tours—on time, every time.">
+    <si-hero
+      title="Luxury Limo & Island Tours in Montego Bay"
+      subtitle="Airport transfers, VIP chauffeurs, and private tours—on time, every time."
+      heroBg="var(--bg-hero-home)"
+      mediaSrc="/assets/images/hero-home.svg"
+      mediaAlt="Luxury chauffeur vehicle in Montego Bay">
       <div hero-actions>
         <a class="btn" routerLink="/book">Book a Ride</a>
         <a class="btn secondary" routerLink="/pricing">Get a Quote</a>
@@ -83,7 +88,13 @@ import { PublicContentService } from '../data/public-content.service';
     .p{ padding:14px; } h3{ margin:0 0 6px; } ul{ margin:0; padding-left:18px; color:var(--color-text-600);}
     .grid4{ display:grid; gap:10px; grid-template-columns:repeat(4,minmax(0,1fr)); }
     .grid3{ display:grid; gap:10px; grid-template-columns:repeat(3,minmax(0,1fr)); }
-    .finalCta{ background:linear-gradient(135deg,var(--color-ocean-700), var(--color-ocean-500)); color:#fff; padding:36px 0; }
+    .finalCta{
+      background-image:linear-gradient(135deg, rgba(31,31,31,.72), rgba(58,58,58,.62)), var(--bg-hero-home);
+      background-size:cover;
+      background-position:center;
+      color:#fff;
+      padding:36px 0;
+    }
     .ctaRow{ display:flex; justify-content:space-between; gap:12px; align-items:center; }
     .actions{ display:flex; gap:8px; }
     @media (max-width:1100px){ .grid{ grid-template-columns:1fr 1fr; } .cards4,.grid4{ grid-template-columns:repeat(2,1fr);} .grid3{ grid-template-columns:1fr; } }

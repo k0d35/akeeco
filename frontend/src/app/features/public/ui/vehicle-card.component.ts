@@ -9,7 +9,7 @@ import { RouterLink } from '@angular/router';
   imports: [CommonModule, RouterLink],
   template: `
     <article class="card v">
-      <div class="img"></div>
+      <div class="img" [style.background-image]="'url(' + (vehicle.imageUrl || fallbackImage(vehicle.id)) + ')'"></div>
       <h3>{{ vehicle.name }}</h3>
       <p>Seats {{ vehicle.seats }} • Luggage {{ vehicle.luggage }}</p>
       <div class="chips"><span class="pill" *ngFor="let a of vehicle.amenities">{{ a }}</span></div>
@@ -20,10 +20,20 @@ import { RouterLink } from '@angular/router';
       </div>
     </article>
   `,
-  styles: [`.v{ padding:12px; } .img{ height:170px; border-radius:12px; background:linear-gradient(145deg,#bae6fd,#e2e8f0); } h3{ margin:10px 0 4px; } p{ margin:0; color:var(--color-text-600);} .chips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;} .price{ margin-top:8px; font-weight:900; } .row{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }`]
+  styles: [`.v{ padding:12px; } .img{ height:170px; border-radius:12px; background-color:#dbeafe; background-size:cover; background-position:center; } h3{ margin:10px 0 4px; } p{ margin:0; color:var(--color-text-600);} .chips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;} .price{ margin-top:8px; font-weight:900; } .row{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }`]
 })
 export class VehicleCardComponent {
   @Input({ required: true }) vehicle!: VehicleClass;
   @Output() details = new EventEmitter<VehicleClass>();
+
+  fallbackImage(id: string): string {
+    const map: Record<string, string> = {
+      SEDAN: '/assets/images/fleet-sedan.svg',
+      SUV: '/assets/images/fleet-suv.svg',
+      VAN: '/assets/images/fleet-van.svg',
+      LIMO: '/assets/images/fleet-limo.svg',
+    };
+    return map[id] || '/assets/images/hero-fleet.svg';
+  }
 }
 

@@ -32,7 +32,7 @@ import { PublicBooking } from '../data/public.models';
       <ng-template #noMatch><div class="card p muted">No booking loaded yet.</div></ng-template>
     </div>
   `,
-  styles: [`.heroSmall{ padding:52px 0 22px; background:linear-gradient(140deg,var(--color-ocean-900),var(--color-ocean-700)); color:#fff; } .block{ margin-top:14px; display:grid; gap:10px; } .p{ padding:14px; display:grid; gap:8px; } .row{ display:flex; gap:8px; flex-wrap:wrap; } .muted{ color:var(--color-text-600); } .err{ color:var(--danger); }`]
+  styles: [`.heroSmall{ padding:52px 0 22px; background-image:linear-gradient(140deg, rgba(17,17,17,.7), rgba(31,31,31,.52)), var(--bg-hero-manage); background-size:cover; background-position:center; color:#fff; } .block{ margin-top:14px; display:grid; gap:10px; } .p{ padding:14px; display:grid; gap:8px; } .row{ display:flex; gap:8px; flex-wrap:wrap; } .muted{ color:var(--color-text-600); } .err{ color:var(--danger); }`]
 })
 export class ManageBookingPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -125,4 +125,3 @@ export class ManageBookingPageComponent implements OnInit {
     return when - Date.now() > 6 * 60 * 60 * 1000;
   }
 }
-

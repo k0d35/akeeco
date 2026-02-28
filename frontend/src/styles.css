@@ -22,6 +22,20 @@
   --danger: var(--color-danger);
   --ok: var(--color-success);
   --radius: 14px;
+
+  --bg-hero-home: url('/assets/images/hero-home.svg');
+  --bg-hero-services: url('/assets/images/hero-services.svg');
+  --bg-hero-airport: url('/assets/images/hero-airport.svg');
+  --bg-hero-tours: url('/assets/images/hero-tours.svg');
+  --bg-hero-corporate: url('/assets/images/hero-corporate.svg');
+  --bg-hero-events: url('/assets/images/hero-events.svg');
+  --bg-hero-fleet: url('/assets/images/hero-fleet.svg');
+  --bg-hero-pricing: url('/assets/images/hero-pricing.svg');
+  --bg-hero-book: url('/assets/images/hero-book.svg');
+  --bg-hero-manage: url('/assets/images/hero-manage.svg');
+  --bg-hero-about: url('/assets/images/hero-about.svg');
+  --bg-hero-contact: url('/assets/images/hero-contact.svg');
+  --bg-staff-login: url('/assets/images/staff-login-bg.svg');
 }
 *{ box-sizing: border-box; }
 body{
